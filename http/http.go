@@ -9,7 +9,7 @@ func New(config *Config) *Client {
 	return &Client{
 		http: fiber.New(fiber.Config{
 			ReadTimeout:           time.Second * time.Duration(config.ReadTimeout),
-			WriteTimeout:          time.Second * time.Duration(config.ReadTimeout),
+			WriteTimeout:          time.Second * time.Duration(config.WriteTimeout),
 			DisableStartupMessage: true,
 		}),
 		config: config,

@@ -15,7 +15,7 @@ func main() {
 		c.Use()
 		c.Routes(web(), api())
 	})
-	_ = h.Run()
+	h.StartServerWithGracefulShutdown()
 }
 
 func web() http.Groups {

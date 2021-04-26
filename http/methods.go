@@ -1,5 +1,11 @@
 package http
 
+import (
+	"log"
+	"os"
+	"os/signal"
+)
+
 func (c *Client) Use(args ...interface{}) *Client {
 	for _, arg := range args {
 		c.http.Use(arg)
@@ -14,9 +20,21 @@ func (c *Client) Inject(opts ...Option) *Client {
 	return c
 }
 
-func (c *Client) Run() (err error) {
-	err = c.http.Listen(":" + c.config.Port)
-	return
+func (c *Client) StartServerWithGracefulShutdown() {
+	idleConnClosed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+		if err := c.http.Shutdown(); err != nil {
+			log.Printf("Oops... Server is not shutting down! Reason: %v", err)
+		}
+		close(idleConnClosed)
+	}()
+	if err := c.http.Listen(":" + c.config.Port); err != nil {
+		log.Printf("Oops... Server is not running! Reason: %v", err)
+	}
+	<-idleConnClosed
 }
 
 func (c *Client) Routes(groups ...Groups) {
