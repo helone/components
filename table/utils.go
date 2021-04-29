@@ -1,10 +1,9 @@
 package table
 
 import (
-	"fmt"
+	"errors"
 	"github.com/aliyun/aliyun-tablestore-go-sdk/tablestore"
 	"github.com/oleiade/reflections"
-	"os"
 	"reflect"
 	"strings"
 )
@@ -20,17 +19,21 @@ func primaryKey(table interface{}) (*tablestore.PrimaryKey, error) {
 	if err != nil {
 		return nil, err
 	}
+	tablePrimaryKey := new(tablestore.PrimaryKey)
 
-	pk := new(tablestore.PrimaryKey)
 	for field, tag := range tags {
-		//name, index := strings.Split(tag, ",")
-
-		fmt.Println(field)
-		fmt.Println(tag)
+		index, _ := reflections.GetFieldTag(table, field, "primaryKey")
+		value, _ := reflections.GetField(table, field)
+		if index != "" {
+			tablePrimaryKey.AddPrimaryKeyColumn(tag, value)
+		}
 	}
-	os.Exit(1)
-	pk.AddPrimaryKeyColumn("uuid", "123")
-	return pk, nil
+
+	if len(tablePrimaryKey.PrimaryKeys) == 0 {
+		return nil, errors.New("not found table index row")
+	}
+
+	return tablePrimaryKey, nil
 }
 
 func getFieldNameMap(item interface{}) (map[string]string, map[string]string, error) {

@@ -24,6 +24,10 @@ func getRowChange(item interface{}, cond tablestore.RowExistenceExpectation) (*t
 	putRowChange.PrimaryKey = primaryKeyColumn
 
 	for _, field := range fields {
+		index, _ := reflections.GetFieldTag(item, field, "primaryKey")
+		if index != "" {
+			continue
+		}
 		value, _ := reflections.GetField(item, field)
 		column := fieldToJSONMap[field]
 		putRowChange.AddColumn(column, value)
